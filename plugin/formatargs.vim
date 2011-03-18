@@ -54,6 +54,14 @@ let s:formatargs_extra_string_arg_offset = 2
 "     (It was easy to add this feature but I would not use it.)
 let s:formatargs_extra_arg_offset = 0
 
+" Value of the maximum number of args that can be formatted. 
+"   This also limits how many lines are search for the terminating ')'.
+let s:max_number_args = 10
+
+" Value of the maximum number of lines to search after the start of
+" the method for a non-white space character.
+let s:max_line_search_after_method_start = 2
+
 " ============================================================================
 " End of Configuration Options
 " ============================================================================
@@ -64,9 +72,15 @@ let s:formatargs_extra_arg_offset = 0
 " File:          formatargs.vim
 " Summary:       Function for formatting Scala methods arguments 
 " Author:        Richard Emberson <richard.n.embersonATgmailDOTcom>
-" Last Modified: 10/26/2010
-" Version:       1.0
+" Last Modified: 03/18/2011
+" Version:       1.1
 " Modifications:
+"  1.1 : Maximum number of arguments is now a parameter with default
+"          value 10 (the original value). This can now be modified to
+"          allow for the formating of more than 10 arguments.
+"        Maximum number of lines to search for the first non-white space
+"          character is now a parameter with default value 2 (the original
+"          value). One is not likely to ever need to increase this value.
 "  1.0 : initial public release.
 "
 " Tested on vim 7.2 on Linux
@@ -422,7 +436,7 @@ endfunction
 function! s:BuildParenList(initialPos, lineNos)
     let currentPos = a:initialPos
     let currentLine = a:lineNos
-    let maxLine = currentLine + 10
+    let maxLine = currentLine + s:max_number_args
     let isnewline = s:IS_FALSE
 
     let parenDepth = 0
@@ -599,7 +613,7 @@ endfunction
 function! s:BuildDotList(initialPos, lineNos)
     let currentPos = a:initialPos
     let currentLine = a:lineNos
-    let maxLine = currentLine + 10
+    let maxLine = currentLine + s:max_number_args
     let isnewline = s:IS_FALSE
 
     let type = 'arg'
@@ -744,7 +758,7 @@ endfunction
 function! s:BuildStringList(initialPos, lineNos)
     let currentPos = a:initialPos
     let currentLine = a:lineNos
-    let maxLine = currentLine + 10
+    let maxLine = currentLine + s:max_number_args
     let isnewline = s:IS_FALSE
 
     let type = 'textstart'
@@ -852,7 +866,7 @@ endfunction
 function! s:FindFirstChar(leftparen, line)
     let currentPos = a:leftparen + 1
     let currentLine = a:line
-    let maxLine = currentLine + 2
+    let maxLine = currentLine + s:max_line_search_after_method_start
 
     while currentLine < maxLine
       let text = getline(currentLine)
@@ -884,7 +898,7 @@ endfunction
 function! s:FindLeftParen()
     let currentPos = col(".")
     let currentLine = line(".")
-    let maxLine = currentLine + 2
+    let maxLine = currentLine + s:max_line_search_after_method_start
 
     while currentLine < maxLine
       let text = getline(currentLine)
@@ -917,7 +931,7 @@ endfunction
 function! s:FindDot()
     let currentPos = col(".")
     let currentLine = line(".")
-    let maxLine = currentLine + 2
+    let maxLine = currentLine + s:max_line_search_after_method_start
 
     while currentLine < maxLine
       let text = getline(currentLine)
@@ -947,7 +961,7 @@ endfunction
 function! s:FindDQuote()
     let currentPos = col(".")
     let currentLine = line(".")
-    let maxLine = currentLine + 2
+    let maxLine = currentLine + s:max_line_search_after_method_start
 
     while currentLine < maxLine
       let text = getline(currentLine)
