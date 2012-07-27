@@ -1,5 +1,5 @@
 " ============================================================================
-" formatargs.vim
+" scala#format.vim
 "
 " $Id:$
 "
@@ -29,7 +29,7 @@
 
 " ============================================================================
 " Configuration Options:
-"   These help control the behavior of formatargs.vim
+"   These help control the behavior of format.vim
 "   Remember, if you change these and then upgrade to a later version, 
 "   your changes will be lost.
 " ============================================================================
@@ -44,7 +44,7 @@ let s:IS_TRUE = 1
 "   If an argument is a string concatenated from multiple parts, this
 "   option defined the additional indend for the later parts of the string.
 "   Recommend setting to 0 or 2.
-let s:formatargs_extra_string_arg_offset = 2
+let g:scala_format_extra_string_arg_offset = 2
 
 " Value of the additional indent given to the additional arguments
 " after the first argument.
@@ -52,15 +52,15 @@ let s:formatargs_extra_string_arg_offset = 2
 "   of spaces.
 "   Recommend setting to 0 
 "     (It was easy to add this feature but I would not use it.)
-let s:formatargs_extra_arg_offset = 0
+let g:scala_format_extra_arg_offset = 0
 
 " Value of the maximum number of args that can be formatted. 
 "   This also limits how many lines are search for the terminating ')'.
-let s:max_number_args = 10
+let g:scala_format_max_number_args = 15
 
 " Value of the maximum number of lines to search after the start of
 " the method for a non-white space character.
-let s:max_line_search_after_method_start = 2
+let g:scala_format_max_line_search_after_method_start = 2
 
 " ============================================================================
 " End of Configuration Options
@@ -69,12 +69,13 @@ let s:max_line_search_after_method_start = 2
 " ============================================================================
 " History:
 "
-" File:          formatargs.vim
+" File:          scala/format.vim
 " Summary:       Function for formatting Scala methods arguments 
 " Author:        Richard Emberson <richard.n.embersonATgmailDOTcom>
 " Last Modified: 03/18/2011
-" Version:       1.1
+" Version:       2.0
 " Modifications:
+"  2.0 : Support for autoloading.
 "  1.1 : Maximum number of arguments is now a parameter with default
 "          value 10 (the original value). This can now be modified to
 "          allow for the formating of more than 10 arguments.
@@ -91,15 +92,9 @@ let s:max_line_search_after_method_start = 2
 "
 " Installation:
 " 
-" 1. Edit the configuration section. It is commented, so I won't explain the
-"    options here.
-"
-" 2. Put something like this in your .vimrc file:
-"
-"      source $HOME/.vim/formatargs.vim
-"      autocmd FileType scala map <Leader>f :call FormatArgs()<CR>
-"      autocmd FileType scala map <Leader>c :call FormatMethodChain()<CR>
-"      autocmd FileType scala map <Leader>s :call FormatString()<CR>
+" The {Format} autoload 'format.vim' code file should be in the 'autoload/scala'
+" directory, the 'format.txt' in the 'doc/scala' directory and the plugin
+" 'format.vim' code in the 'plugin/scala' directory.
 "
 " Usage:
 "
@@ -143,7 +138,7 @@ let s:max_line_search_after_method_start = 2
 "      ....
 "    }
 "
-" becomes (with s:formatargs_extra_arg_offset = 2)
+" becomes (with g:scala_format_extra_arg_offset = 2)
 "
 "    aVeryLongMethodNameAsAnExampleUsage(
 "                            thisIsArgOne, 
@@ -163,7 +158,7 @@ let s:max_line_search_after_method_start = 2
 "      ....
 "    }
 "
-" becomes (with let s:formatargs_extra_string_arg_offset = 0)
+" becomes (with let g:scala_format_extra_string_arg_offset = 0)
 "
 "    m1(thisIsArgOne, 
 "       "this is" + 
@@ -173,7 +168,7 @@ let s:max_line_search_after_method_start = 2
 "      ....
 "    }
 "
-" or becomes (with let s:formatargs_extra_string_arg_offset = 2)
+" or becomes (with let g:scala_format_extra_string_arg_offset = 2)
 "
 "    m1(thisIsArgOne, 
 "       "this is" + 
@@ -280,7 +275,7 @@ let s:max_line_search_after_method_start = 2
 " --------------------------------------------------------
 " Entry point for this script
 " --------------------------------------------------------
-function! FormatArgs()
+function! scala#format#Args()
     let l:save_cursor = getpos(".")
     let l:pos = col(".")
     set noautoindent
@@ -336,7 +331,7 @@ endfunction
 "
 " format: a.b.c.d
 "
-function! FormatMethodChain()
+function! scala#format#MethodChain()
     let l:save_cursor = getpos(".")
     let l:pos = col(".")
     set noautoindent
@@ -375,7 +370,7 @@ endfunction
 "
 " format: "a" + "b" + "c" + "d"
 "
-function! FormatString()
+function! scala#format#String()
     let l:save_cursor = getpos(".")
     let l:pos = col(".")
     set noautoindent
@@ -436,7 +431,7 @@ endfunction
 function! s:BuildParenList(initialPos, lineNos)
     let currentPos = a:initialPos
     let currentLine = a:lineNos
-    let maxLine = currentLine + s:max_number_args
+    let maxLine = currentLine + g:scala_format_max_number_args
     let isnewline = s:IS_FALSE
 
     let parenDepth = 0
@@ -613,7 +608,7 @@ endfunction
 function! s:BuildDotList(initialPos, lineNos)
     let currentPos = a:initialPos
     let currentLine = a:lineNos
-    let maxLine = currentLine + s:max_number_args
+    let maxLine = currentLine + g:scala_format_max_number_args
     let isnewline = s:IS_FALSE
 
     let type = 'arg'
@@ -758,7 +753,7 @@ endfunction
 function! s:BuildStringList(initialPos, lineNos)
     let currentPos = a:initialPos
     let currentLine = a:lineNos
-    let maxLine = currentLine + s:max_number_args
+    let maxLine = currentLine + g:scala_format_max_number_args
     let isnewline = s:IS_FALSE
 
     let type = 'textstart'
@@ -866,7 +861,7 @@ endfunction
 function! s:FindFirstChar(leftparen, line)
     let currentPos = a:leftparen + 1
     let currentLine = a:line
-    let maxLine = currentLine + s:max_line_search_after_method_start
+    let maxLine = currentLine + g:scala_format_max_line_search_after_method_start
 
     while currentLine < maxLine
       let text = getline(currentLine)
@@ -898,7 +893,7 @@ endfunction
 function! s:FindLeftParen()
     let currentPos = col(".")
     let currentLine = line(".")
-    let maxLine = currentLine + s:max_line_search_after_method_start
+    let maxLine = currentLine + g:scala_format_max_line_search_after_method_start
 
     while currentLine < maxLine
       let text = getline(currentLine)
@@ -931,7 +926,7 @@ endfunction
 function! s:FindDot()
     let currentPos = col(".")
     let currentLine = line(".")
-    let maxLine = currentLine + s:max_line_search_after_method_start
+    let maxLine = currentLine + g:scala_format_max_line_search_after_method_start
 
     while currentLine < maxLine
       let text = getline(currentLine)
@@ -961,7 +956,7 @@ endfunction
 function! s:FindDQuote()
     let currentPos = col(".")
     let currentLine = line(".")
-    let maxLine = currentLine + s:max_line_search_after_method_start
+    let maxLine = currentLine + g:scala_format_max_line_search_after_method_start
 
     while currentLine < maxLine
       let text = getline(currentLine)
@@ -1004,14 +999,14 @@ function! s:FormatParenList(offset, entrylist)
       elseif type == 'textstart'
         let offset = a:offset
       elseif type == 'textmiddle'
-        let offset = a:offset + s:formatargs_extra_string_arg_offset
+        let offset = a:offset + g:scala_format_extra_string_arg_offset
       elseif type == 'textend'
-        let offset = a:offset + s:formatargs_extra_string_arg_offset
+        let offset = a:offset + g:scala_format_extra_string_arg_offset
       else
         throw "Unknown argument type: " . type
       endif
       if index == 1
-        let offset = offset + s:formatargs_extra_arg_offset
+        let offset = offset + g:scala_format_extra_arg_offset
       endif
 
       if isnewline == s:IS_TRUE
